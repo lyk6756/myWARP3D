@@ -1,0 +1,26 @@
+# ****************************************************************************
+#                                                               
+#   File: Header.linux_emt64.omp          
+#                                                               
+#   Updated:   Jan 2017
+#
+#   Description:
+#     Makefile Header for use with the WARP3D 
+#     This header will make an OpenMP Makefile for Linux 
+#
+#     It sets specific flags required to compile the threaded version of WARP3D,
+#     then calls the part of the Makefile which is the same for both the OpenMP 
+#     and MPI versions of the code. 
+#
+# *****************************************************************************
+#
+
+HYI = 
+HYL = 
+MPIOPT =
+LIBMPI = 
+ODIR = ././../obj_linux_em64t
+EXE_NAME = warp3d.omp
+#
+include Makefile.linux_em64t.inc
+#
