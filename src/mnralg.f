@@ -4,7 +4,7 @@ c     *                      subroutine mnralg                       *
 c     *                                                              *
 c     *                       written by : bh                        *
 c     *                                                              *
-c     *                   last modified: 6/17/2017 rhd               *
+c     *                   last modified: 5/16/2018 rhd               *
 c     *                                                              *
 c     *     supervises advancing the solution from                   *
 c     *     step n to n+1 using a newton iteration process.          *
@@ -264,7 +264,19 @@ c
              call errmsg ( 255, dum, dums, dumr, dumd)
              emit_extrap_msg = .false. ! no need for repeated messages
            else
-             if( show_details ) write(out,9152) step, scaling_factor
+             if( abs( scaling_factor ) > 5.0d0 .and. show_details ) then
+               if( show_details ) write(out,9158) step, scaling_factor
+             else
+               if( show_details ) write(out,9152) step, scaling_factor
+             end if
+             if( scaling_factor < zero ) then
+               scaling_factor = zero
+               if( show_details ) write(out,9153) scaling_factor
+             end if
+             if( scaling_factor > 5.0d0 ) then
+                scaling_factor = one
+                if( show_details ) write(out,9153) scaling_factor
+             end if
              extrapolated_du = .true.
              du(1:nodof) =  scaling_factor * du(1:nodof)
              if( local_debug ) write (iout,9530) scaling_factor
@@ -402,6 +414,8 @@ c          we add nodal mass (with newmark beta and dt) to
 c          diagonal terms of element stiffnesses.
 c
  25   continue
+      msg_count_1 = 0 ! used to prevent excessive messages in low level routines
+      msg_count_2 = 0
       if( iter .gt. 1 ) ! start of step done above
      &         call stifup( step, iter, out, newstf, show_details )
 c
@@ -657,10 +671,15 @@ c
  9152 format(7x,
      & '>> extrapolating displacements to start step:      ',i7,
      & ' (* ',f7.3,')')
+ 9153 format(7x,
+     & '>> extrapolation scale factor reset to :           ',f7.3)
  9154 format(7x,
      & '>> no extrapolating displacements to start step:   ',i7)
  9155 format(7x,
      & '>> delta forces for loads/displ/temps/creep. step: ',i7)
+ 9158 format(7x,
+     & '>> extrapolating displacements to start step:      ',i7,
+     & ' (* ',e10.3,')')
  9410 format(/1x,'>> iteration limit exceeded for current step:',i7,
      & /,1x       '   (or adaptive sub-increment) or the solution ',
      &   'appears to be diverging....')

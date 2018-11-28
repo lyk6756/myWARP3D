@@ -4,7 +4,7 @@ c     *                      subroutine inicon                       *
 c     *                                                              *
 c     *                       written by : bh                        *
 c     *                                                              *
-c     *                   last modified : 09/21/2017 rhd             *
+c     *                   last modified : 9/15/2018 rhd              *
 c     *                                                              *
 c     *     supervises and conducts the input of the                 *
 c     *     desired initial conditions for the structure at time 0.  *
@@ -20,7 +20,8 @@ c
      &                      temper_nodes_ref, temperatures_ref,
      &                      inverse_incidences, initial_stresses,
      &                      initial_stresses_user_routine,
-     &                      initial_stresses_file
+     &                      initial_stresses_file,
+     &                      initial_stresses_input
       implicit none
 c
       logical :: sbflg1, sbflg2
@@ -70,6 +71,10 @@ c
            cond = 4
            call inicon_node_values
         elseif( matchs('stresses',4)  ) then
+           initial_stresses_input = .true.
+           write(out,*) ' '
+           write(out,9000)
+           write(out,*) ' '
            cond = 5
            call inicon_initial_stresses
            if( scan_stat .eq. 1 ) call readsc
@@ -79,6 +84,13 @@ c
            return
         end if
       end do
+c
+      return
+c
+ 9000 format('>>>>> Note: the presence of initial stresses triggers',
+     & /     '            inclusion of J7, J8 terms in J-integral',
+     & /     '            computations. See Appendix K.' )
+c
 
       contains
 c     ========
