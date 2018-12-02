@@ -216,7 +216,7 @@ c
       temperatures_on_model = any( temper_nodes .ne. zero ) .or.
      &                        any( temper_elems .ne. 0 )
       setup_node_props =  temperatures_on_model
-      if( process_initial_state .or. initial_stresses_input ) 
+      if( process_initial_state .or. initial_stresses_input )
      &      setup_node_props = .false.
 c
       if( setup_node_props ) call di_node_props_setup( 1 ) !  MPI parallel
@@ -319,7 +319,7 @@ c
       static_max         = -1.0d30
       static_avg         =  zero
 c
-c              13b. separate drivers for comput values
+c              13b. separate drivers for compute values
 c                   on 1 domain for user-defined q-values, and
 c                   for defining-computing over automatic domains
 
@@ -344,7 +344,7 @@ c
 c
 c              16. release arrays used for both user defined and
 c                  automatic domains. call routines to get
-c                  releases on onther than rank 0 for MPI
+c                  releases on other than rank 0 for MPI
 c
       call didrive_release( out )  ! only does rank 0 for MPI
 c
