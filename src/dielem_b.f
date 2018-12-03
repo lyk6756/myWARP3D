@@ -607,7 +607,8 @@ c
      &                              daux_strain_x1, du11, du21, du31,
      &                              du111, du112, du113,
      &                              du211, du212, du213,
-     &                              du311, du312, du313, out )
+     &                              du311, du312, du313, out,
+     &                              DAUX_STRESS_X1 )
 c
       implicit none
 c
@@ -621,7 +622,8 @@ c
      &     du11(8), du21(8), du31(8),
      &     du111(8), du112(8), du113(8),
      &     du211(8), du212(8), du213(8),
-     &     du311(8), du312(8), du313(8)
+     &     du311(8), du312(8), du313(8),
+     &     DAUX_STRESS_X1(9,8)
 c
 c             local variables
 c
@@ -636,7 +638,9 @@ c
      &     de111, de221, de331, de121, de231, de131,
      &     sum1a, sum1b, sum2a, sum2b, sum3a, sum3b,
      &     zero, one, two, three, pi, four, five, six, eight,
-     &     nine, ten, eleven, twelve, fourteen
+     &     nine, ten, eleven, twelve, fourteen,
+     &     TTTT2,
+     &     DS112, DS122, DS132, DS222, DS232, DS332
 c
       logical debug
 c
@@ -653,6 +657,7 @@ c
       ucoeff   = sqrt(r/(two*pi)) / (two*mu_front)
       t2       = t / two
       tt2      = t * three / two
+      TTTT2    = T * ( ONE + SIX ) / TWO
 c
       if( debug ) then
          write(out,101) "r", r, "theta", t, "theta/2", t2, "3*theta/2",
@@ -688,6 +693,7 @@ c
       du311(1:8)              = zero
       du312(1:8)              = zero
       du313(1:8)              = zero
+      DAUX_STRESS_X1(1:9,1:8) = ZERO
 c
       do j=1,5
          k(1:3) = zero
@@ -791,6 +797,42 @@ c
 c
          ds331 = zero
          if( j.eq.2 .or. j.eq.4 ) ds331 = nu_front * (ds111 + ds221)
+C
+C             CALCULATE X2-DERIVATIVES OF STRESS
+C
+         DS112 = K(1)/(8*R*SQRT(2*PI*R))
+     &         * ( - FIVE*SIN(TT2) - THREE*SIN(TTTT2) )
+     &         + K(2)/(8*R*SQRT(2*PI*R))
+     &         * ( - NINE*COS(TT2) - THREE*COS(TTTT2) )
+C
+         DS122 = K(1)/(8*R*SQRT(2*PI*R))
+     &         * ( COS(TT2) + THREE*SIN(TTTT2) )
+     &         - K(2)/(8*R*SQRT(2*PI*R))
+     &         * ( FIVE*SIN(TT2) + THREE*SIN(TTTT2) )
+C
+         DS132 = K(3)/(2*R*SQRT(2*PI*R))
+     &         * ( - COS(TT2) )
+C
+         DS222 = K(1)/(8*R*SQRT(2*PI*R))
+     &         * ( - THREE*SIN(TT2) + THREE*SIN(TTTT2) )
+     &         + K(2)/(8*R*SQRT(2*PI*R))
+     &         * ( COS(TT2) + THREE*COS(TTTT2) )
+C
+         DS232 = K(3)/(2*R*SQRT(2*PI*R))
+     &         * ( - SIN(TT2) )
+C
+         DS332 = ZERO
+         IF( J.EQ.2 .OR. J.EQ.4 ) DS332 = NU_FRONT * (DS112 + DS222)
+C
+         DAUX_STRESS_X1(1,J) = DS111
+         DAUX_STRESS_X1(2,J) = DS121
+         DAUX_STRESS_X1(3,J) = DS131
+         DAUX_STRESS_X1(4,J) = DS121
+         DAUX_STRESS_X1(5,J) = DS221
+         DAUX_STRESS_X1(6,J) = DS231
+         DAUX_STRESS_X1(7,J) = DS131
+         DAUX_STRESS_X1(8,J) = DS231
+         DAUX_STRESS_X1(9,J) = DS331
 c
 c             calculate auxiliary displacements
 c             using material properties at the crack front
@@ -1499,7 +1541,8 @@ c
      &                         du113_aux, du213_aux, du313_aux,
      &                         process_temps, elem_alpha, dalpha_x1,
      &                         point_temp, point_q, weight, elemno,
-     &                         fgm_e, fgm_nu, iterm, out, debug)
+     &                         fgm_e, fgm_nu, iterm, out, debug,
+     &                         DAUX_STRESS_X1 )
 c
       implicit none
 c
@@ -1515,7 +1558,8 @@ c
      &     du211_aux(8), du212_aux(8), du213_aux(8),
      &     du311_aux(8), du312_aux(8), du313_aux(8),
      &     elem_alpha(6), dalpha_x1(6), point_temp, point_q, weight,
-     &     iterm(8,8)
+     &     iterm(8,8),
+     &     DAUX_STRESS_X1(9,8)
       logical process_temps, fgm_e, fgm_nu, debug
 c
 c             local variables
@@ -1679,6 +1723,14 @@ c
      &                        weight, iterm(5,j)
            end if
         end do
+C
+C              TERM5 = X1 DERIV OF DISPLACEMENT * DERIV OF
+C                      AUX STRESS * Q
+C              TERM5 = U_J,1 * SIG^AUX_IJ,I * Q = 0
+C
+        DO J = 1, 8
+            ITERM(5,J) = ZERO
+        END DO
 c
 c             term6 = dcijkl_x1 * mechanical strain * aux strain * q
 c             an additional term is necessary for thermal loading.
@@ -1731,6 +1783,22 @@ c
      &                        iterm(6,j)
            end if
         end do
+C
+C              TERM6 = STRAIN * X1 DERIV OF AUX STRESS * Q
+C              TERM6 = EPS_IJ * SIG^AUX_IJ,1 *Q
+C
+        DO J = 1, 8
+            ITERM(6,J) = ITERM(6,J) - WEIGHT * POINT_Q
+     &                 * (   CEPS_GP(1,PTNO) * DAUX_STRESS_X1(1,J)
+     &                     + CEPS_GP(2,PTNO) * DAUX_STRESS_X1(2,J)
+     &                     + CEPS_GP(3,PTNO) * DAUX_STRESS_X1(3,J)
+     &                     + CEPS_GP(4,PTNO) * DAUX_STRESS_X1(4,J)
+     &                     + CEPS_GP(5,PTNO) * DAUX_STRESS_X1(5,J)
+     &                     + CEPS_GP(6,PTNO) * DAUX_STRESS_X1(6,J)
+     &                     + CEPS_GP(7,PTNO) * DAUX_STRESS_X1(7,J)
+     &                     + CEPS_GP(8,PTNO) * DAUX_STRESS_X1(8,J)
+     &                     + CEPS_GP(9,PTNO) * DAUX_STRESS_X1(9,J) )
+        END DO
 c
  1111   continue
 c

@@ -121,7 +121,8 @@ c
      c   du31_aux(8), du111_aux(8), du112_aux(8),
      d   du113_aux(8), du211_aux(8), du212_aux(8),
      e   du213_aux(8), du311_aux(8), du312_aux(8),
-     f   du313_aux(8), dcijkl_x1(3), sijkl(3), dsijkl_x1(3)
+     f   du313_aux(8), dcijkl_x1(3), sijkl(3), dsijkl_x1(3),
+     G   DAUX_STRESS_X1(9,8)
 c
       double precision :: e, nu, nx, ny, nz, kin_energy, r, t, toler,
      a   termu_aux, termv_aux, termw_aux, gpq, point_x,
@@ -902,7 +903,7 @@ c
       j6_incr = temp1 + temp2
       jterm(6) = jterm(6) + temp1 + temp2
       neglect_term_j6 = fgm_node_values_defined .or. seg_curves_flag
-     &                  .or. process_initial_state 
+     &                  .or. process_initial_state
      &                  .or. initial_stresses_input
       include_term_j6 = .not. neglect_term_j6
       if( neglect_term_j6 ) jterm(6) = zero
@@ -1043,7 +1044,8 @@ c
      &                        du111_aux, du112_aux, du113_aux,
      &                        du211_aux, du212_aux, du213_aux,
      &                        du311_aux, du312_aux, du313_aux,
-     &                        iout )
+     &                        iout,
+     &                        DAUX_STRESS_X1 )
 c
 c        compute auxiliary fields for t-stresses
 c
@@ -1071,7 +1073,8 @@ c
      &                   process_temperatures, elem_alpha,
      &                   dalpha_x1, point_temp, point_q, weight,
      &                   elemno, fgm_e, fgm_nu, iterm,
-     &                   iout, debug)
+     &                   iout, debug,
+     &                   DAUX_STRESS_X1 )
 c
       return
       end subroutine dielem_I_terms

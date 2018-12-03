@@ -33,7 +33,7 @@ cls
 ::       shell does not automatically set up to see Microsoft Visual Studio 8
 ::       located under the 32-bit c:\Program Files (x86)
 ::
-set nmake_exe="c:\Program Files (x86)\Microsoft Visual Studio 12.0\Intel Fortran\Microsoft Files\VC\Bin\nmake.exe"
+set nmake_exe="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64\nmake.exe"
 ::
 if not exist %nmake_exe% (
   echo.
@@ -76,7 +76,7 @@ set build_mode=64
 ::      support MPI and WARP3D on Windows.
 ::
   echo -- Uninstalling MPI code...
-  del .\mpi_code.f 
+  del .\mpi_code.f
   del .\mpi_handle_slaves.f
   del .\mod_local_stiffness.f
   del .\distributed_assembly.f
@@ -91,7 +91,7 @@ set build_mode=64
   echo        - mod_local_stiffness.f
   copy %xdir%\distributed_assembly_dummy.f .\distributed_assembly.f /y
   echo        - distributed_assembly.f
-: 
+:
 :
 ::
   echo -- MPI code uninstalled...
