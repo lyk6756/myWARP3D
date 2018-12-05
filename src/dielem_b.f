@@ -638,9 +638,7 @@ c
      &     de111, de221, de331, de121, de231, de131,
      &     sum1a, sum1b, sum2a, sum2b, sum3a, sum3b,
      &     zero, one, two, three, pi, four, five, six, eight,
-     &     nine, ten, eleven, twelve, fourteen,
-     &     TTTT2,
-     &     DS112, DS122, DS132, DS222, DS232, DS332
+     &     nine, ten, eleven, twelve, fourteen
 c
       logical debug
 c
@@ -657,7 +655,6 @@ c
       ucoeff   = sqrt(r/(two*pi)) / (two*mu_front)
       t2       = t / two
       tt2      = t * three / two
-      TTTT2    = T * ( ONE + SIX ) / TWO
 c
       if( debug ) then
          write(out,101) "r", r, "theta", t, "theta/2", t2, "3*theta/2",
@@ -797,32 +794,6 @@ c
 c
          ds331 = zero
          if( j.eq.2 .or. j.eq.4 ) ds331 = nu_front * (ds111 + ds221)
-C
-C             CALCULATE X2-DERIVATIVES OF STRESS
-C
-         DS112 = K(1)/(8*R*SQRT(2*PI*R))
-     &         * ( - FIVE*SIN(TT2) - THREE*SIN(TTTT2) )
-     &         + K(2)/(8*R*SQRT(2*PI*R))
-     &         * ( - NINE*COS(TT2) - THREE*COS(TTTT2) )
-C
-         DS122 = K(1)/(8*R*SQRT(2*PI*R))
-     &         * ( COS(TT2) + THREE*SIN(TTTT2) )
-     &         - K(2)/(8*R*SQRT(2*PI*R))
-     &         * ( FIVE*SIN(TT2) + THREE*SIN(TTTT2) )
-C
-         DS132 = K(3)/(2*R*SQRT(2*PI*R))
-     &         * ( - COS(TT2) )
-C
-         DS222 = K(1)/(8*R*SQRT(2*PI*R))
-     &         * ( - THREE*SIN(TT2) + THREE*SIN(TTTT2) )
-     &         + K(2)/(8*R*SQRT(2*PI*R))
-     &         * ( COS(TT2) + THREE*COS(TTTT2) )
-C
-         DS232 = K(3)/(2*R*SQRT(2*PI*R))
-     &         * ( - SIN(TT2) )
-C
-         DS332 = ZERO
-         IF( J.EQ.2 .OR. J.EQ.4 ) DS332 = NU_FRONT * (DS112 + DS222)
 C
          DAUX_STRESS_X1(1,J) = DS111
          DAUX_STRESS_X1(2,J) = DS121
@@ -1788,7 +1759,7 @@ C              TERM6 = STRAIN * X1 DERIV OF AUX STRESS * Q
 C              TERM6 = EPS_IJ * SIG^AUX_IJ,1 *Q
 C
         DO J = 1, 8
-            ITERM(6,J) = ITERM(6,J) - WEIGHT * POINT_Q
+            ITERM(6,J) = ZERO - WEIGHT * POINT_Q
      &                 * (   CEPS_GP(1,PTNO) * DAUX_STRESS_X1(1,J)
      &                     + CEPS_GP(2,PTNO) * DAUX_STRESS_X1(2,J)
      &                     + CEPS_GP(3,PTNO) * DAUX_STRESS_X1(3,J)
