@@ -1706,60 +1706,60 @@ c
 c             term6 = dcijkl_x1 * mechanical strain * aux strain * q
 c             an additional term is necessary for thermal loading.
 c
-        if( debug ) write(out,1100)
-        do j=1,8
-           temp1 = zero
-           temp2 = zero
-           temp3 = zero
-           temp4 = zero
-           temp1 = aux_strain(1,j)
-     &           * (   dcijkl_x1(1)
-     &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
-c
-           temp2 = aux_strain(5,j)
-     &           * (   dcijkl_x1(2)
-     &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
-     &             +   dcijkl_x1(1)
-     &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
-c
-           temp3 = aux_strain(9,j)
-     &           * (   dcijkl_x1(2)
-     &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
-     &             +   dcijkl_x1(1)
-     &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
-c
-           temp4 = two * dcijkl_x1(3)
-     &           * ( aux_strain(2,j) * ceps_gp(2,ptno)
-     &           +   aux_strain(3,j) * ceps_gp(3,ptno)
-     &           +   aux_strain(6,j) * ceps_gp(6,ptno) )
-c
-           iterm(6,j) = iterm(6,j)
-     &                -   weight * point_q
-     &                  * ( temp1 + temp2 + temp3 + temp4 )
-           if( debug ) then
-              if( j.eq.2.or.j.eq.7 )
-     &        write(out,1110) j, (dcijkl_x1(i),i=1,3),
-     &                        (ceps_gp(i,ptno),i=1,9),
-     &                        (aux_strain(i,j),i=1,9),
-     &                        temp1, temp2, temp3, temp4,
-     &                        weight, point_q,
-     &                        iterm(6,j)
-           end if
-        end do
+C         if( debug ) write(out,1100)
+C         do j=1,8
+C            temp1 = zero
+C            temp2 = zero
+C            temp3 = zero
+C            temp4 = zero
+C            temp1 = aux_strain(1,j)
+C      &           * (   dcijkl_x1(1)
+C      &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
+C c
+C            temp2 = aux_strain(5,j)
+C      &           * (   dcijkl_x1(2)
+C      &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
+C      &             +   dcijkl_x1(1)
+C      &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
+C c
+C            temp3 = aux_strain(9,j)
+C      &           * (   dcijkl_x1(2)
+C      &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
+C      &             +   dcijkl_x1(1)
+C      &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
+C c
+C            temp4 = two * dcijkl_x1(3)
+C      &           * ( aux_strain(2,j) * ceps_gp(2,ptno)
+C      &           +   aux_strain(3,j) * ceps_gp(3,ptno)
+C      &           +   aux_strain(6,j) * ceps_gp(6,ptno) )
+C c
+C            iterm(6,j) = iterm(6,j)
+C      &                -   weight * point_q
+C      &                  * ( temp1 + temp2 + temp3 + temp4 )
+C            if( debug ) then
+C               if( j.eq.2.or.j.eq.7 )
+C      &        write(out,1110) j, (dcijkl_x1(i),i=1,3),
+C      &                        (ceps_gp(i,ptno),i=1,9),
+C      &                        (aux_strain(i,j),i=1,9),
+C      &                        temp1, temp2, temp3, temp4,
+C      &                        weight, point_q,
+C      &                        iterm(6,j)
+C            end if
+C         end do
 C
 C              TERM6 = STRAIN * X1 DERIV OF AUX STRESS * Q
 C              TERM6 = EPS_IJ * SIG^AUX_IJ,1 *Q
 C
         DO J = 1, 8
-            ITERM(6,J) = ZERO - WEIGHT * POINT_Q
+            ITERM(6,J) = ITERM(6,J) - WEIGHT * POINT_Q
      &                 * (   CEPS_GP(1,PTNO) * DAUX_STRESS_X1(1,J)
      &                     + CEPS_GP(2,PTNO) * DAUX_STRESS_X1(2,J)
      &                     + CEPS_GP(3,PTNO) * DAUX_STRESS_X1(3,J)
