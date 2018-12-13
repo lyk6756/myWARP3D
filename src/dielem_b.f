@@ -607,7 +607,8 @@ c
      &                              daux_strain_x1, du11, du21, du31,
      &                              du111, du112, du113,
      &                              du211, du212, du213,
-     &                              du311, du312, du313, out )
+     &                              du311, du312, du313, out,
+     &                              DAUX_STRESS_X1 )
 c
       implicit none
 c
@@ -621,7 +622,8 @@ c
      &     du11(8), du21(8), du31(8),
      &     du111(8), du112(8), du113(8),
      &     du211(8), du212(8), du213(8),
-     &     du311(8), du312(8), du313(8)
+     &     du311(8), du312(8), du313(8),
+     &     DAUX_STRESS_X1(9,8)
 c
 c             local variables
 c
@@ -688,6 +690,7 @@ c
       du311(1:8)              = zero
       du312(1:8)              = zero
       du313(1:8)              = zero
+      DAUX_STRESS_X1(1:9,1:8) = ZERO
 c
       do j=1,5
          k(1:3) = zero
@@ -791,6 +794,16 @@ c
 c
          ds331 = zero
          if( j.eq.2 .or. j.eq.4 ) ds331 = nu_front * (ds111 + ds221)
+C
+         DAUX_STRESS_X1(1,J) = DS111
+         DAUX_STRESS_X1(2,J) = DS121
+         DAUX_STRESS_X1(3,J) = DS131
+         DAUX_STRESS_X1(4,J) = DS121
+         DAUX_STRESS_X1(5,J) = DS221
+         DAUX_STRESS_X1(6,J) = DS231
+         DAUX_STRESS_X1(7,J) = DS131
+         DAUX_STRESS_X1(8,J) = DS231
+         DAUX_STRESS_X1(9,J) = DS331
 c
 c             calculate auxiliary displacements
 c             using material properties at the crack front
@@ -1499,7 +1512,8 @@ c
      &                         du113_aux, du213_aux, du313_aux,
      &                         process_temps, elem_alpha, dalpha_x1,
      &                         point_temp, point_q, weight, elemno,
-     &                         fgm_e, fgm_nu, iterm, out, debug)
+     &                         fgm_e, fgm_nu, iterm, out, debug,
+     &                         DAUX_STRESS_X1 )
 c
       implicit none
 c
@@ -1515,7 +1529,8 @@ c
      &     du211_aux(8), du212_aux(8), du213_aux(8),
      &     du311_aux(8), du312_aux(8), du313_aux(8),
      &     elem_alpha(6), dalpha_x1(6), point_temp, point_q, weight,
-     &     iterm(8,8)
+     &     iterm(8,8),
+     &     DAUX_STRESS_X1(9,8)
       logical process_temps, fgm_e, fgm_nu, debug
 c
 c             local variables
@@ -1679,58 +1694,82 @@ c
      &                        weight, iterm(5,j)
            end if
         end do
+C
+C              TERM5 = X1 DERIV OF DISPLACEMENT * DERIV OF
+C                      AUX STRESS * Q
+C              TERM5 = U_J,1 * SIG^AUX_IJ,I * Q = 0
+C
+        DO J = 1, 8
+            ITERM(5,J) = ZERO
+        END DO
 c
 c             term6 = dcijkl_x1 * mechanical strain * aux strain * q
 c             an additional term is necessary for thermal loading.
 c
-        if( debug ) write(out,1100)
-        do j=1,8
-           temp1 = zero
-           temp2 = zero
-           temp3 = zero
-           temp4 = zero
-           temp1 = aux_strain(1,j)
-     &           * (   dcijkl_x1(1)
-     &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
-c
-           temp2 = aux_strain(5,j)
-     &           * (   dcijkl_x1(2)
-     &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
-     &             +   dcijkl_x1(1)
-     &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
-c
-           temp3 = aux_strain(9,j)
-     &           * (   dcijkl_x1(2)
-     &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
-     &             +   dcijkl_x1(2)
-     &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
-     &             +   dcijkl_x1(1)
-     &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
-c
-           temp4 = two * dcijkl_x1(3)
-     &           * ( aux_strain(2,j) * ceps_gp(2,ptno)
-     &           +   aux_strain(3,j) * ceps_gp(3,ptno)
-     &           +   aux_strain(6,j) * ceps_gp(6,ptno) )
-c
-           iterm(6,j) = iterm(6,j)
-     &                -   weight * point_q
-     &                  * ( temp1 + temp2 + temp3 + temp4 )
-           if( debug ) then
-              if( j.eq.2.or.j.eq.7 )
-     &        write(out,1110) j, (dcijkl_x1(i),i=1,3),
-     &                        (ceps_gp(i,ptno),i=1,9),
-     &                        (aux_strain(i,j),i=1,9),
-     &                        temp1, temp2, temp3, temp4,
-     &                        weight, point_q,
-     &                        iterm(6,j)
-           end if
-        end do
+C         if( debug ) write(out,1100)
+C         do j=1,8
+C            temp1 = zero
+C            temp2 = zero
+C            temp3 = zero
+C            temp4 = zero
+C            temp1 = aux_strain(1,j)
+C      &           * (   dcijkl_x1(1)
+C      &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
+C c
+C            temp2 = aux_strain(5,j)
+C      &           * (   dcijkl_x1(2)
+C      &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
+C      &             +   dcijkl_x1(1)
+C      &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
+C c
+C            temp3 = aux_strain(9,j)
+C      &           * (   dcijkl_x1(2)
+C      &               * (ceps_gp(1,ptno) - elem_alpha(1)*point_temp)
+C      &             +   dcijkl_x1(2)
+C      &               * (ceps_gp(5,ptno) - elem_alpha(2)*point_temp)
+C      &             +   dcijkl_x1(1)
+C      &               * (ceps_gp(9,ptno) - elem_alpha(3)*point_temp) )
+C c
+C            temp4 = two * dcijkl_x1(3)
+C      &           * ( aux_strain(2,j) * ceps_gp(2,ptno)
+C      &           +   aux_strain(3,j) * ceps_gp(3,ptno)
+C      &           +   aux_strain(6,j) * ceps_gp(6,ptno) )
+C c
+C            iterm(6,j) = iterm(6,j)
+C      &                -   weight * point_q
+C      &                  * ( temp1 + temp2 + temp3 + temp4 )
+C            if( debug ) then
+C               if( j.eq.2.or.j.eq.7 )
+C      &        write(out,1110) j, (dcijkl_x1(i),i=1,3),
+C      &                        (ceps_gp(i,ptno),i=1,9),
+C      &                        (aux_strain(i,j),i=1,9),
+C      &                        temp1, temp2, temp3, temp4,
+C      &                        weight, point_q,
+C      &                        iterm(6,j)
+C            end if
+C         end do
+C
+C              TERM6 = STRAIN * X1 DERIV OF AUX STRESS * Q
+C              TERM6 = EPS_IJ * SIG^AUX_IJ,1 *Q
+C
+        DO J = 1, 8
+            ITERM(6,J) = ITERM(6,J) - WEIGHT * POINT_Q
+     &                 * (   CEPS_GP(1,PTNO) * DAUX_STRESS_X1(1,J)
+     &                     + CEPS_GP(2,PTNO) * DAUX_STRESS_X1(2,J)
+     &                     + CEPS_GP(3,PTNO) * DAUX_STRESS_X1(3,J)
+     &                     + CEPS_GP(4,PTNO) * DAUX_STRESS_X1(4,J)
+     &                     + CEPS_GP(5,PTNO) * DAUX_STRESS_X1(5,J)
+     &                     + CEPS_GP(6,PTNO) * DAUX_STRESS_X1(6,J)
+     &                     + CEPS_GP(7,PTNO) * DAUX_STRESS_X1(7,J)
+     &                     + CEPS_GP(8,PTNO) * DAUX_STRESS_X1(8,J)
+     &                     + CEPS_GP(9,PTNO) * DAUX_STRESS_X1(9,J) )
+        END DO
 c
  1111   continue
 c
