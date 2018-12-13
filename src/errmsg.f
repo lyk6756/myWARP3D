@@ -3,7 +3,7 @@ c     *                      suboutine errmsg                        *
 c     *                                                              *
 c     *                       written by : bh                        *
 c     *                                                              *
-c     *                   last modified : 2/8/2018 rhd               *
+c     *                   last modified : 11/26/2018 rhd             *
 c     *                                                              *
 c     *     this subroutine prints assorted error messages in re-    *
 c     *     ponse to calls from all over the program. virtually all  *
@@ -30,6 +30,7 @@ c
       integer, save :: high_lvl_count = 0
       logical, save :: mess_61, write_msg_255, write_msg_321
       integer, save :: count_150=0
+      integer, save :: count_136=0
       data hundred /100.0/
       data mess_61, write_msg_255, write_msg_321
      &     / .true., .true., .true. /
@@ -165,12 +166,7 @@ c
 c
 c
  100  continue
-      num_error = num_error + 1
-      write(out,9009) noelem,mxel
- 9009 format(/1x,'>>>>> error: ',i7,': the number of elements in the ',
-     &           'structure exceeds'/14x,i7,': the maximum number of',
-     &         'elements allowed. execution'/14x,'will be terminated.'/)
-      input_ok = .false.
+c                 available     
       go to 9999
 c
 c
@@ -818,11 +814,7 @@ c
 c
 c
  740  continue
-      num_error = num_error + 1
-      write(out,9172) param,noelem
- 9172 format(/1x,'>>>>> error: ',i6,': the current block number ',
-     &           ' exceeds ',i6,':'/14x,'the maximum number of bloc',
-     &           'ks allowed. it will be ignored.'/)
+c               available
       go to 9999
 c
 c
@@ -1385,11 +1377,14 @@ c
       go to 9999
 c
 c
- 1360 continue
+ 1360 continue      
       num_warn = num_warn + 1
-      write(out,9133) param
- 9133 format(/1x,'>>>>> warning: dof ',i6,' has already been constrain',
-     &           'ed. this constraint'/14x,'request will be ignored'/)
+      if( count_136 == 0 ) write(out,8136)
+      count_136 = 1
+      write(out,9133) int(rparam), param
+ 9133 format(10x,2i10)
+ 8136 format(/1x,'>>>>> warning: these nodes and dof numbers already',
+     &       ' have constraints defined:')
       go to 9999
 c
 c

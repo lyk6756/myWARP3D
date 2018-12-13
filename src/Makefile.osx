@@ -46,7 +46,7 @@
 #
 #
 OSNAME   := OSX
-BUILDNUM := 3420
+BUILDNUM := 3500
 #
 ODIR = ././../obj_mac_os_x
 EXE_NAME = warp3d.omp
@@ -79,7 +79,7 @@ CHECKFLOAT = -fpe0 -init=snan,arrays -fp-speculation=safe
 CHECKFLOAT =
 MINIMUM_MACHINE_TYPE  = -xAVX -align array64byte
 DEFAULT_MACHINE_TYPE  = -xAVX2  -align array64byte
-DEFAULT_MACHINE_TYPE  = -xHOST -align array64byte
+DEFAULT_MACHINE_TYPE  = -xHOST -align array64byte  -qopt-zmm-usage=high
 MACHINE_TYPE = $(DEFAULT_MACHINE_TYPE)
 #
 FCOPTS   =  -O3 -ip -fpconstant -fixed -72 -traceback $(PROFILE) $(OPT_REPORT)  \

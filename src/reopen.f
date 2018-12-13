@@ -4,7 +4,7 @@ c     *                      subroutine reopen                       *
 c     *                                                              *
 c     *                      written by : bh                         *
 c     *                                                              *
-c     *                   last modified : 9/15/2018 rhd              *
+c     *                   last modified : 11/26/2018 rhd             *
 c     *                                                              *
 c     *          read restart file. get solution start up            *
 c     *                                                              *
@@ -121,7 +121,7 @@ c
      &              crdtop, nummat, numcol, histep,
      &              lowstp, ltmstp, nlibel, numlod, mxiter,
      &              mniter, lodhed, lgnmcn, mxlitr,
-     &              nogp, nprs, nplrs, nelblk, numgrp, lgoump,
+     &              nprs, nplrs, nelblk, numgrp, lgoump,
      &              max_current_pts, max_current_curves,
      &              num_seg_curve_sets,
      &              solver_flag, old_solver_flag, solver_memory,
@@ -135,7 +135,7 @@ c
      &              coarsening, agg_levels, interpolation, relaxation,
      &              sweeps, cf, cycle_type, max_levels,
      &              one_crystal_hist_size, common_hist_size,
-     &              initial_state_step
+     &              initial_state_step, mxnmbl
       call chk_data_key( fileno, 1, 0 )
       call mem_allocate( 4 ) ! vectors based on # nodes
 c
@@ -169,9 +169,7 @@ c
      &             initial_stresses_file
       call chk_data_key( fileno, 1, 1 )
 c
-c
 c                       read in double precision variables.
-c
 c
       read(fileno) dt,nbeta,emax,fmax,prdmlt,total_mass,ext_work,
      &             beta_fact,total_model_time,scaling_adapt,eps_bbar,
@@ -201,14 +199,12 @@ c
       call init_maps( fileno, 2 )
       call rdbk( fileno, plrlst, mxlsz )
       call rdbk( fileno, stprng, mxlc*2 )
-      call rdbk( fileno, gpmap,  nogp )
       call mem_allocate( 9 )
       call rdbk( fileno, incmap, noelem )
       call mem_allocate( 14 )
       call rdbk( fileno, crdmap, nonode )
       call rdbk( fileno, dstmap, nonode )
       call rdbk( fileno, cstmap, nodof )
-      call rdbk( fileno, state, nogp )
       call rdbk( fileno, incid, inctop )
       call rdbk( fileno, prslst, mxlsz )
       call rdbk( fileno, lodlst, mxlc )
@@ -217,7 +213,8 @@ c
       call init_maps( fileno, 5 )
       call init_maps( fileno, 6 )
       call init_maps( fileno, 7 )
-      call rd2d( fileno, elblks(0,1) , 4, 4, nelblk )
+      call mem_allocate( 17 )
+      call rd2d( fileno, elblks(0,1) , 4, 4, mxnmbl )
       call rdbk( fileno, cp, mxedof )
       call rdbk( fileno, dcp, mxedof )
       call rd2d( fileno, icp, mxutsz, mxutsz, 2 )
@@ -243,6 +240,7 @@ c
 c
 c                       read real arrays.
 c
+      call mem_allocate( 11 )
       call rd2d( fileno, props, mxelpr, mxelpr, noelem )
       call rd2d( fileno, matprp, mxmtpr, mxmtpr, mxmat )
       call rdbk( fileno, user_cnstrn_stp_factors, max_step_limit )
@@ -784,7 +782,6 @@ c                         send basic data, constraint data, and
 c                         analysis parameters data to the slave processors.
 c                         also send the element information to the
 c                         processor who owns the element.
-c                        Allocate the diagonal stiffness for non-MPI
 c
       call wmpi_send_basic
       call wmpi_send_const
@@ -793,8 +790,6 @@ c
       call wmpi_init_owner
       call wmpi_send_contact (.true.)
       call wmpi_send_crystals
-      if ( .not. use_mpi ) call mem_allocate ( 11 )
-
 c
 c                       initialize the adaptive algorithm so that
 c                       it can operate immediately if needed.

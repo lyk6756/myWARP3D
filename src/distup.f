@@ -48,7 +48,7 @@ c
 c
       allocate( coinc_list(max_exp_front) )
 c
-c             determine if the user has specified the crack front nodes
+c             determine if the user has specificed the crack front nodes
 c             using node sets. this is done when the model is not
 c             collapsed at the ct. For a user defined crack tip, load
 c             expanded_front_nodes with node_set specified by the
@@ -131,7 +131,7 @@ c             skip this section when the user has defined the ct.
 c
 c             look at first 1 or 2 nodes specified to be on the
 c             crack front. compute a distance to be used for locating
-c             all other nodes coincident with each specified
+c             all other nodes conincident with each specified
 c             crack front node. set the "box" size for proximity
 c             checking as a fraction of the distance measure.
 c
@@ -169,7 +169,7 @@ c
       end if
 c
 c             loop over each specified front node. locate all other
-c             nodes in model that are coincident with the front node.
+c             nodes in model that are conincident with the front node.
 c             (use the box test). set the q-value of each coincident
 c             node to be same as user specified value for the specified
 c             front node. dump verification list if user requested it.

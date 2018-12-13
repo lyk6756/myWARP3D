@@ -4,7 +4,7 @@ c     *               subroutine mem_allocate                        *
 c     *                                                              *
 c     *                    written by : rhd                          *
 c     *                                                              *
-c     *                last modified : 2/8/2018 rhd                  *
+c     *                last modified : 11/26/2018 rhd                *
 c     *                                                              *
 c     *     provides the general allocation/deallocation of arrays   *
 c     *     during problem solution.                                 *
@@ -19,6 +19,7 @@ c
 c
       implicit none
 c
+      include 'mkl.fi'
       integer :: itype, i, alloc_stat, k
       double precision, parameter :: zero=0.0d0
       logical, parameter :: local_debug=.false.
@@ -253,9 +254,17 @@ c
            call die_abort
          end if
 c
-c              available. deprecated allocate of diagonal stiffness
+c              global elements table (props, iprops, lprops )
+c              we use mkl_malloc to obtain a better aligned
+c              array. WARP3D must have mkl working so we can
+c              use mkl_malloc
 c
       case( 11 )
+         if( ptr_iprops .ne. 0 ) call mkl_free( ptr_iprops )
+         ptr_iprops = mkl_malloc( int8(4*noelem*mxelpr), 64 )
+         ptr_props  = ptr_iprops
+         ptr_lprops = ptr_iprops
+         mxel = noelem
 c
 c              allocate the diagonal mass vectors.
 c
@@ -390,9 +399,16 @@ c
            load_pattern_factors(i,2) = zero
          end do
 c
-c              available.
+c              element blocking table.
 c
       case( 17 )
+       if( allocated( elblks ) ) deallocate( elblks )
+       allocate( elblks(0:3,1:mxnmbl), stat = alloc_stat )
+       if( alloc_stat .ne. 0 ) then
+          write(out,9900)
+          write(out,9908)
+          call die_abort
+       end if
 c
 c              available
 c
@@ -550,5 +566,6 @@ c
  9902 format('                 element equiv. forces')
  9904 format('                 contact forces')
  9906 format('                 contact causes')
+ 9908 format('                 element blocking/domains table')
 c
       end
