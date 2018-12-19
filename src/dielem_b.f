@@ -1513,7 +1513,7 @@ c
      &                         process_temps, elem_alpha, dalpha_x1,
      &                         point_temp, point_q, weight, elemno,
      &                         fgm_e, fgm_nu, iterm, out, debug,
-     &                         DAUX_STRESS_X1 )
+     &                         DAUX_STRESS_X1, ALPHA_GP, THETA_GP )
 c
       implicit none
 c
@@ -1530,7 +1530,7 @@ c
      &     du311_aux(8), du312_aux(8), du313_aux(8),
      &     elem_alpha(6), dalpha_x1(6), point_temp, point_q, weight,
      &     iterm(8,8),
-     &     DAUX_STRESS_X1(9,8)
+     &     DAUX_STRESS_X1(9,8), ALPHA_GP(6), THETA_GP
       logical process_temps, fgm_e, fgm_nu, debug
 c
 c             local variables
@@ -1674,33 +1674,41 @@ c
 c
 c              term5 = stress * x1 deriv of aux strain * q
 c
-        if( debug ) write(out,1080)
-        do j=1,8
-           iterm(5,j) = iterm(5,j) - weight * point_q
-     &                * (   csig(1,ptno) * daux_strain_x1(1,j)
-     &                    + csig(2,ptno) * daux_strain_x1(2,j)
-     &                    + csig(3,ptno) * daux_strain_x1(3,j)
-     &                    + csig(4,ptno) * daux_strain_x1(4,j)
-     &                    + csig(5,ptno) * daux_strain_x1(5,j)
-     &                    + csig(6,ptno) * daux_strain_x1(6,j)
-     &                    + csig(7,ptno) * daux_strain_x1(7,j)
-     &                    + csig(8,ptno) * daux_strain_x1(8,j)
-     &                    + csig(9,ptno) * daux_strain_x1(9,j) )
-           if( debug ) then
-              if( j.eq.2.or.j.eq.7 )
-     &        write(out,1090) j, ptno,
-     &                        (csig(i,ptno),i=1,9),
-     &                        (daux_strain_x1(i,j),i=1,9),
-     &                        weight, iterm(5,j)
-           end if
-        end do
+C         if( debug ) write(out,1080)
+C         do j=1,8
+C            iterm(5,j) = iterm(5,j) - weight * point_q
+C      &                * (   csig(1,ptno) * daux_strain_x1(1,j)
+C      &                    + csig(2,ptno) * daux_strain_x1(2,j)
+C      &                    + csig(3,ptno) * daux_strain_x1(3,j)
+C      &                    + csig(4,ptno) * daux_strain_x1(4,j)
+C      &                    + csig(5,ptno) * daux_strain_x1(5,j)
+C      &                    + csig(6,ptno) * daux_strain_x1(6,j)
+C      &                    + csig(7,ptno) * daux_strain_x1(7,j)
+C      &                    + csig(8,ptno) * daux_strain_x1(8,j)
+C      &                    + csig(9,ptno) * daux_strain_x1(9,j) )
+C            if( debug ) then
+C               if( j.eq.2.or.j.eq.7 )
+C      &        write(out,1090) j, ptno,
+C      &                        (csig(i,ptno),i=1,9),
+C      &                        (daux_strain_x1(i,j),i=1,9),
+C      &                        weight, iterm(5,j)
+C            end if
+C         end do
 C
-C              TERM5 = X1 DERIV OF DISPLACEMENT * DERIV OF
-C                      AUX STRESS * Q
-C              TERM5 = U_J,1 * SIG^AUX_IJ,I * Q = 0
+C              TERM5 = STRAIN * X1 DERIV OF AUX STRESS * Q
+C              TERM5 = EPS_IJ * SIG^AUX_IJ,1 *Q
 C
         DO J = 1, 8
-            ITERM(5,J) = ZERO
+            ITERM(5,J) = ITERM(5,J) - WEIGHT * POINT_Q
+     &                 * (   CEPS_GP(1,PTNO) * DAUX_STRESS_X1(1,J)
+     &                     + CEPS_GP(2,PTNO) * DAUX_STRESS_X1(2,J)
+     &                     + CEPS_GP(3,PTNO) * DAUX_STRESS_X1(3,J)
+     &                     + CEPS_GP(4,PTNO) * DAUX_STRESS_X1(4,J)
+     &                     + CEPS_GP(5,PTNO) * DAUX_STRESS_X1(5,J)
+     &                     + CEPS_GP(6,PTNO) * DAUX_STRESS_X1(6,J)
+     &                     + CEPS_GP(7,PTNO) * DAUX_STRESS_X1(7,J)
+     &                     + CEPS_GP(8,PTNO) * DAUX_STRESS_X1(8,J)
+     &                     + CEPS_GP(9,PTNO) * DAUX_STRESS_X1(9,J) )
         END DO
 c
 c             term6 = dcijkl_x1 * mechanical strain * aux strain * q
@@ -1755,20 +1763,20 @@ C      &                        iterm(6,j)
 C            end if
 C         end do
 C
-C              TERM6 = STRAIN * X1 DERIV OF AUX STRESS * Q
-C              TERM6 = EPS_IJ * SIG^AUX_IJ,1 *Q
+C              TERM6 = AUX STRESS * ALPHA * TEMP * X1 DERIV OF Q
+C              TERM6 = SIG^AUX_IJ * ALPHA_IJ * T * Q,1
 C
         DO J = 1, 8
-            ITERM(6,J) = ITERM(6,J) - WEIGHT * POINT_Q
-     &                 * (   CEPS_GP(1,PTNO) * DAUX_STRESS_X1(1,J)
-     &                     + CEPS_GP(2,PTNO) * DAUX_STRESS_X1(2,J)
-     &                     + CEPS_GP(3,PTNO) * DAUX_STRESS_X1(3,J)
-     &                     + CEPS_GP(4,PTNO) * DAUX_STRESS_X1(4,J)
-     &                     + CEPS_GP(5,PTNO) * DAUX_STRESS_X1(5,J)
-     &                     + CEPS_GP(6,PTNO) * DAUX_STRESS_X1(6,J)
-     &                     + CEPS_GP(7,PTNO) * DAUX_STRESS_X1(7,J)
-     &                     + CEPS_GP(8,PTNO) * DAUX_STRESS_X1(8,J)
-     &                     + CEPS_GP(9,PTNO) * DAUX_STRESS_X1(9,J) )
+            ITERM(6,J) = ITERM(6,J) + WEIGHT * DQX * THETA_GP
+     &                 * (   AUX_STRESS(1,J) * ALPHA_GP(1)
+     &                     + AUX_STRESS(2,J) * ALPHA_GP(4) * HALF
+     &                     + AUX_STRESS(3,J) * ALPHA_GP(6) * HALF
+     &                     + AUX_STRESS(4,J) * ALPHA_GP(4) * HALF
+     &                     + AUX_STRESS(5,J) * ALPHA_GP(2)
+     &                     + AUX_STRESS(6,J) * ALPHA_GP(5) * HALF
+     &                     + AUX_STRESS(7,J) * ALPHA_GP(6) * HALF
+     &                     + AUX_STRESS(8,J) * ALPHA_GP(5) * HALF
+     &                     + AUX_STRESS(9,J) * ALPHA_GP(3) )
         END DO
 c
  1111   continue
@@ -1791,7 +1799,7 @@ c     &                                    + aux_stress(8,j) )
 c     &           + elem_alpha(6) * half * ( aux_stress(3,j)
 c     &                                    + aux_stress(7,j) )
 c           temp1 = temp1 * dtx * weight * point_q
-c
+
 c           temp2 = aux_stress(1,j) * dalpha_x1(1)
 c     &           + aux_stress(5,j) * dalpha_x1(2)
 c     &           + aux_stress(9,j) * dalpha_x1(3)
@@ -1802,9 +1810,9 @@ c     &                                   + aux_stress(8,j) )
 c     &           + dalpha_x1(6) * half * ( aux_stress(3,j)
 c     &                                   + aux_stress(7,j) )
 c           temp2 = temp2 * point_temp * weight * point_q
-c
+
 c           iterm(7,j) = iterm(7,j) + temp1 + temp2
-c
+
 c           if( debug ) then
 c              write(out,1130) j, ptno,
 c     &             (aux_stress(i,j),i=1,9),
@@ -1816,6 +1824,52 @@ c     &             iterm(7,j)
 c           end if
 c        end do
 c
+C
+C              TERM7 = AUX STRESS * ALPHA * DTEMP_X1 * Q
+C                    + AUX STRESS * DALPHA_X1 * TEMP * Q
+C                    + X1 DERIV OF AUX STRESS * ALPHA * TEMP * Q
+C
+        DO J = 1, 8
+            TEMP1 = ZERO
+            TEMP2 = ZERO
+            TEMP3 = ZERO
+C
+            TEMP1 = AUX_STRESS(1,J) * ALPHA_GP(1)
+     &            + AUX_STRESS(2,J) * ALPHA_GP(4) * HALF
+     &            + AUX_STRESS(3,J) * ALPHA_GP(6) * HALF
+     &            + AUX_STRESS(4,J) * ALPHA_GP(4) * HALF
+     &            + AUX_STRESS(5,J) * ALPHA_GP(2)
+     &            + AUX_STRESS(6,J) * ALPHA_GP(5) * HALF
+     &            + AUX_STRESS(7,J) * ALPHA_GP(6) * HALF
+     &            + AUX_STRESS(8,J) * ALPHA_GP(5) * HALF
+     &            + AUX_STRESS(9,J) * ALPHA_GP(3)
+            TEMP1 = TEMP1 * DTX * WEIGHT * POINT_Q
+C
+            TEMP2 = AUX_STRESS(1,J) * DALPHA_X1(1)
+     &            + AUX_STRESS(2,J) * DALPHA_X1(4) * HALF
+     &            + AUX_STRESS(3,J) * DALPHA_X1(6) * HALF
+     &            + AUX_STRESS(4,J) * DALPHA_X1(4) * HALF
+     &            + AUX_STRESS(5,J) * DALPHA_X1(2)
+     &            + AUX_STRESS(6,J) * DALPHA_X1(5) * HALF
+     &            + AUX_STRESS(7,J) * DALPHA_X1(6) * HALF
+     &            + AUX_STRESS(8,J) * DALPHA_X1(5) * HALF
+     &            + AUX_STRESS(9,J) * DALPHA_X1(3)
+            TEMP2 = TEMP2 * THETA_GP * WEIGHT * POINT_Q
+C
+            TEMP3 = DAUX_STRESS_X1(1,J) * ALPHA_GP(1)
+     &            + DAUX_STRESS_X1(2,J) * ALPHA_GP(4) * HALF
+     &            + DAUX_STRESS_X1(3,J) * ALPHA_GP(6) * HALF
+     &            + DAUX_STRESS_X1(4,J) * ALPHA_GP(4) * HALF
+     &            + DAUX_STRESS_X1(5,J) * ALPHA_GP(2)
+     &            + DAUX_STRESS_X1(6,J) * ALPHA_GP(5) * HALF
+     &            + DAUX_STRESS_X1(7,J) * ALPHA_GP(6) * HALF
+     &            + DAUX_STRESS_X1(8,J) * ALPHA_GP(5) * HALF
+     &            + DAUX_STRESS_X1(9,J) * ALPHA_GP(3)
+            TEMP3 = TEMP3 * THETA_GP * WEIGHT * POINT_Q
+C
+            ITERM(7,J) = ITERM(7,J) + TEMP1 + TEMP2 + TEMP3
+        END DO
+C
  2222   continue
 c
         return

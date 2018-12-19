@@ -131,7 +131,8 @@ c
      d   point_vel_x, point_vel_y, point_vel_z, point_ym, point_nu,
      e   dux, dvx, dwx, dqx, dqy, dtheta_x, dswd_x,
      f   point_temp, dqz, dym_x, dnu_x,
-     g   ym_front_node, dudotx, dvdotx, dwdotx
+     g   ym_front_node, dudotx, dvdotx, dwdotx,
+     H   ALPHA_GP(6), THETA_GP
 c
       real, parameter :: neg_99=-99.0, fgm_tol=1.0
       double precision, parameter :: zero=0.0d0, half=0.5d0, two=2.0d0,
@@ -684,6 +685,9 @@ c
       dalpha_x1        = zero ! all terms
       dstrain_x        = zero !   "
       dgrad_x          = zero !   "
+C
+      ALPHA_GP         = ZERO ! ALL TERMS
+      THETA_GP         = ZERO
 c
 !DIR$ VECTOR ALIGNED
       do enode = 1, nnode
@@ -710,6 +714,8 @@ c
      &                            detF_enodes(enode) )
        dym_x    = dym_x  + nx * ym_nodes(enode)
        dnu_x    = dnu_x  + nx * nu_nodes(enode)
+C
+       THETA_GP = THETA_GP + SF(ENODE) * E_NODE_TEMPS(ENODE)
 c
 !DIR$ VECTOR ALIGNED
        dstrain_x(1:9) = dstrain_x(1:9) +
@@ -727,6 +733,9 @@ c
      &          dsf(enode,3,ptno) * jacobi(1,3,ptno)
            dalpha_x1(1:6) = dalpha_x1(1:6) + nx *
      &                      enode_alpha_ij(1:6,enode)
+C
+           ALPHA_GP(1:6) = ALPHA_GP(1:6) + SF(ENODE) *
+     &                     ENODE_ALPHA_IJ(1:6,ENODE)
         end do
       end if
 c
@@ -1074,7 +1083,7 @@ c
      &                   dalpha_x1, point_temp, point_q, weight,
      &                   elemno, fgm_e, fgm_nu, iterm,
      &                   iout, debug,
-     &                   DAUX_STRESS_X1 )
+     &                   DAUX_STRESS_X1, ALPHA_GP, THETA_GP )
 c
       return
       end subroutine dielem_I_terms

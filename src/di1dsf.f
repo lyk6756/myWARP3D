@@ -570,7 +570,7 @@ c * allocate data structures and drive computations                    *
 c * to enable subsequent computations of J(7) and J(8) terms.          *
 c *                                                                    *
 c * if computations not actually required, create small, dummy arrays  *
-c * to simplify checking                                               *                                                                           *
+c * to simplify checking                                               *
 c *                                                                    *
 c * get a stress work value (W) at all model nodes by extrapoaltion    *
 c * from element integration point values, then node averaging         *
@@ -664,7 +664,7 @@ c           extrap_counts, swd_at_nodes and strain_at_nodes
 c           must be allocated for use in dielem_*.f.
 c
 c           allocate minimal size arrays. routines that need these
-c           data will chhck sizes first.
+c           data will check sizes first.
 c
       flags = 0
       allocate( extrap_counts(1), stat = flags(1) )
